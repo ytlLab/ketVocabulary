@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cambridge KET 單字挑戰賽 </title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #16a085;
+            --danger-color: #e74c3c;
+            --bg-color: #f4f6f7;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+        }
+        
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
+        h2 { margin: 5px 0 0 0; font-size: 14px; opacity: 0.8; }
+
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .alphabet-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 25px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .tab-btn {
+            background-color: #eaf2f8;
+            border: none;
+            color: var(--primary-color);
+            padding: 10px 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .tab-btn:hover { background-color: #d4e6f1; }
+        .tab-btn.active { background-color: var(--secondary-color); color: white; }
+
+        .game-panel {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px 20px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            max-width: 500px;
+            margin: 0 auto 20px auto;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .lives { color: var(--danger-color); }
+        .score { color: var(--secondary-color); }
+
+        .word-display {
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 12px;
+            margin: 20px 0;
+            color: var(--primary-color);
+            min-height: 50px;
+        }
+
+        .hint-card {
+            background-color: #f8f9fa;
+            border-left: 5px solid var(--secondary-color);
+            padding: 12px;
+            max-width: 500px;
+            margin: 0 auto 25px auto;
+            border-radius: 4px;
+            font-size: 15px;
+            color: #555;
+            text-align: left;
+        }
+
+        .hint-card strong { color: var(--primary-color); }
+
+        .keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .key {
+            background-color: #f2f4f4;
+            border: 2px solid #bdc3c7;
+            color: var(--primary-color);
+            font-size: 18px;
+            font-weight: bold;
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .key:hover:not(:disabled) {
+            background-color: #e5e8e8;
+            transform: scale(1.05);
+        }
+
+        .key:disabled { opacity: 0.4; }
+        .key.correct { background-color: var(--secondary-color) !important; color: white; border-color: var(--secondary-color); }
+        .key.wrong { background-color: var(--danger-color) !important; color: white; border-color: var(--danger-color); }
+
+        .message {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+            min-height: 30px;
+        }
+        .message.win { color: var(--secondary-color); }
+        .message.lose { color: var(--danger-color); }
+
+        .next-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.2s;
+            display: none;
+        }
+        .next-btn:hover { background-color: #34495e; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Cambridge KET 單字挑戰賽</h1>
+    <h2>必須由左至右「依序」猜出正確字母，按錯順序即算失誤！</h2>
+</header>
+
+<div class="container">
+    <div class="section-title">請選擇一個單字字首開題：</div>
+    <div class="alphabet-tabs" id="alphabetTabs"></div>
+
+    <div class="game-panel">
+        <div class="status-bar">
+            <div class="score">得分: <span id="scoreValue">0</span></div>
+            <div class="lives">剩餘機會: <span id="livesValue">💚 💚 💚</span></div>
+        </div>
+
+        <div id="wordDisplay" class="word-display">_ _ _ _</div>
+        
+        <div class="hint-card">
+            <div><strong>詞性：</strong><span id="hintPos">--</span></div>
+            <div style="margin-top: 5px;"><strong>提示：</strong><span id="hintMeaning">--</span></div>
+        </div>
+
+        <div class="keyboard" id="keyboard"></div>
+        
+        <div id="gameMessage" class="message"></div>
+        <button id="nextBtn" class="next-btn" onclick="setupGame(currentTab)">下一題</button>
+    </div>
+</div>
+
+<script>
+const vocabularyData = {
+    "A": [
+        {"word": "able", "pos": "adj", "meaning": "有能力的"},
+        {"word": "about", "pos": "adv & prep", "meaning": "大約；關於"},
+        {"word": "above", "pos": "prep", "meaning": "在...上方"},
+        {"word": "act", "pos": "v", "meaning": "行動；表演"},
+        {"word": "accident", "pos": "n", "meaning": "事故；意外"},
+        {"word": "across", "pos": "prep", "meaning": "橫過；穿過"},
+        {"word": "activity", "pos": "n", "meaning": "活動"},
+        {"word": "actor", "pos": "n", "meaning": "男演員"},
+        {"word": "actually", "pos": "adv", "meaning": "實際上；其實"},
+        {"word": "add", "pos": "v", "meaning": "增加；添加"},
+        {"word": "address", "pos": "n", "meaning": "地址"},
+        {"word": "adult", "pos": "adj & n", "meaning": "成年人"},
+        {"word": "advanced", "pos": "adj", "meaning": "高級的；先進的"},
+        {"word": "adventure", "pos": "n", "meaning": "冒險；奇遇"},
+        {"word": "advertisement", "pos": "n", "meaning": "廣告"},
+        {"word": "aeroplane", "pos": "n", "meaning": "飛機"},
+        {"word": "afraid", "pos": "adj", "meaning": "害怕的"},
+        {"word": "after", "pos": "adv & prep", "meaning": "在...之後"},
+        {"word": "afternoon", "pos": "n", "meaning": "下午"},
+        {"word": "afterwards", "pos": "adv", "meaning": "後來；然後"},
+        {"word": "again", "pos": "adv", "meaning": "再次"},
+        {"word": "against", "pos": "prep", "meaning": "反對；對抗"},
+        {"word": "age", "pos": "n", "meaning": "年齡"},
+        {"word": "ago", "pos": "adv", "meaning": "以前"},
+        {"word": "agree", "pos": "v", "meaning": "同意"},
+        {"word": "air", "pos": "n", "meaning": "空氣"},
+        {"word": "airport", "pos": "n", "meaning": "機場"},
+        {"word": "all", "pos": "det & pron", "meaning": "全部的"},
+        {"word": "almost", "pos": "adv", "meaning": "幾乎"},
+        {"word": "alone", "pos": "adj & adv", "meaning": "單獨的"},
+        {"word": "already", "pos": "adv", "meaning": "已經"},
+        {"word": "also", "pos": "adv", "meaning": "也"},
+        {"word": "always", "pos": "adv", "meaning": "總是"},
+        {"word": "amazing", "pos": "adj", "meaning": "令人驚奇的"},
+        {"word": "ambulance", "pos": "n", "meaning": "救護車"},
+        {"word": "among", "pos": "prep", "meaning": "在...之中"},
+        {"word": "angry", "pos": "adj", "meaning": "生氣的"},
+        {"word": "animal", "pos": "n", "meaning": "動物"},
+        {"word": "another", "pos": "det & pron", "meaning": "另一個"},
+        {"word": "answer", "pos": "n & v", "meaning": "回答；答案"},
+        {"word": "any", "pos": "det & pron", "meaning": "任何的"},
+        {"word": "anybody", "pos": "pron", "meaning": "任何人"},
+        {"word": "anyone", "pos": "pron", "meaning": "任何人"},
+        {"word": "anything", "pos": "pron", "meaning": "任何事物"},
+        {"word": "anyway", "pos": "adv", "meaning": "無論如何"},
+        {"word": "anywhere", "pos": "adv", "meaning": "任何地方"},
+        {"word": "apartment", "pos": "n", "meaning": "公寓"},
+        {"word": "apple", "pos": "n", "meaning": "蘋果"},
+        {"word": "appointment", "pos": "n", "meaning": "預約"},
+        {"word": "area", "pos": "n", "meaning": "區域"},
+        {"word": "arm", "pos": "n", "meaning": "手臂"},
+        {"word": "arrive", "pos": "v", "meaning": "到達"},
+        {"word": "art", "pos": "n", "meaning": "藝術"},
+        {"word": "article", "pos": "n", "meaning": "文章"},
+        {"word": "artist", "pos": "n", "meaning": "藝術家"},
+        {"word": "ask", "pos": "v", "meaning": "詢問"},
+        {"word": "assistant", "pos": "n", "meaning": "助理"},
+        {"word": "at", "pos": "prep", "meaning": "在..."},
+        {"word": "aunt", "pos": "n", "meaning": "阿姨"},
+        {"word": "autumn", "pos": "n", "meaning": "秋天"},
+        {"word": "away", "pos": "adv", "meaning": "離去"}
+    ],
+    "B": [
+        {"word": "baby", "pos": "n", "meaning": "嬰兒"},
+        {"word": "bad", "pos": "adj", "meaning": "壞的"},
+        {"word": "bag", "pos": "n", "meaning": "袋子"},
+        {"word": "ball", "pos": "n", "meaning": "球"},
+        {"word": "banana", "pos": "n", "meaning": "香蕉"},
+        {"word": "band", "pos": "n", "meaning": "樂團"},
+        {"word": "bank", "pos": "n", "meaning": "銀行"},
+        {"word": "barbecue", "pos": "n", "meaning": "烤肉"},
+        {"word": "baseball", "pos": "n", "meaning": "棒球"},
+        {"word": "basketball", "pos": "n", "meaning": "籃球"},
+        {"word": "bath", "pos": "n", "meaning": "洗澡"},
+        {"word": "bathroom", "pos": "n", "meaning": "浴室"},
+        {"word": "beach", "pos": "n", "meaning": "海灘"},
+        {"word": "bear", "pos": "n", "meaning": "熊"},
+        {"word": "beautiful", "pos": "adj", "meaning": "美麗的"},
+        {"word": "because", "pos": "conj", "meaning": "因為"},
+        {"word": "become", "pos": "v", "meaning": "成為"},
+        {"word": "bed", "pos": "n", "meaning": "床"},
+        {"word": "bedroom", "pos": "n", "meaning": "臥室"},
+        {"word": "before", "pos": "adv & prep", "meaning": "在...之前"},
+        {"word": "begin", "pos": "v", "meaning": "開始"},
+        {"word": "beginner", "pos": "n", "meaning": "初學者"},
+        {"word": "behind", "pos": "adv & prep", "meaning": "在...後面"},
+        {"word": "believe", "pos": "v", "meaning": "相信"},
+        {"word": "belong", "pos": "v", "meaning": "屬於"},
+        {"word": "below", "pos": "prep", "meaning": "在...下方"},
+        {"word": "belt", "pos": "n", "meaning": "皮帶"},
+        {"word": "between", "pos": "prep", "meaning": "在...之間"},
+        {"word": "bicycle", "pos": "n", "meaning": "腳踏車"},
+        {"word": "big", "pos": "adj", "meaning": "大的"},
+        {"word": "bike", "pos": "n", "meaning": "單車"},
+        {"word": "bill", "pos": "n", "meaning": "帳單"},
+        {"word": "bird", "pos": "n", "meaning": "鳥"},
+        {"word": "birthday", "pos": "n", "meaning": "生日"},
+        {"word": "biscuit", "pos": "n", "meaning": "餅乾"},
+        {"word": "bit", "pos": "n", "meaning": "一點點"},
+        {"word": "black", "pos": "adj", "meaning": "黑色的"},
+        {"word": "blanket", "pos": "n", "meaning": "毛毯"},
+        {"word": "blond", "pos": "adj", "meaning": "金髮的"},
+        {"word": "blouse", "pos": "n", "meaning": "女襯衫"},
+        {"word": "blue", "pos": "adj", "meaning": "藍色的"},
+        {"word": "board", "pos": "n", "meaning": "板子"},
+        {"word": "boat", "pos": "n", "meaning": "船"},
+        {"word": "body", "pos": "n", "meaning": "身體"},
+        {"word": "boil", "pos": "v", "meaning": "煮沸"},
+        {"word": "book", "pos": "n & v", "meaning": "書本；預訂"},
+        {"word": "bookshelf", "pos": "n", "meaning": "書架"},
+        {"word": "bookshop", "pos": "n", "meaning": "書店"},
+        {"word": "boot", "pos": "n", "meaning": "靴子"},
+        {"word": "bored", "pos": "adj", "meaning": "感到無聊的"},
+        {"word": "boring", "pos": "adj", "meaning": "令人無聊的"},
+        {"word": "born", "pos": "adj", "meaning": "出生的"},
+        {"word": "borrow", "pos": "v", "meaning": "借入"},
+        {"word": "boss", "pos": "n", "meaning": "老闆"},
+        {"word": "bottle", "pos": "n", "meaning": "瓶子"},
+        {"word": "bottom", "pos": "n", "meaning": "底部"},
+        {"word": "bowl", "pos": "n", "meaning": "碗"},
+        {"word": "box", "pos": "n", "meaning": "箱子"},
+        {"word": "boy", "pos": "n", "meaning": "男孩"},
+        {"word": "brake", "pos": "n & v", "meaning": "煞車"},
+        {"word": "bread", "pos": "n", "meaning": "麵包"},
+        {"word": "break", "pos": "n & v", "meaning": "打破；休息"},
+        {"word": "breakfast", "pos": "n", "meaning": "早餐"},
+        {"word": "bridge", "pos": "n", "meaning": "橋梁"},
+        {"word": "brilliant", "pos": "adj", "meaning": "傑出的"},
+        {"word": "bring", "pos": "v", "meaning": "帶來"},
+        {"word": "brother", "pos": "n", "meaning": "兄弟"},
+        {"word": "brown", "pos": "adj", "meaning": "咖啡色的"},
+        {"word": "build", "pos": "v", "meaning": "建造"},
+        {"word": "building", "pos": "n", "meaning": "建築物"},
+        {"word": "burger", "pos": "n", "meaning": "漢堡"},
+        {"word": "burn", "pos": "v", "meaning": "燃燒"},
+        {"word": "bus", "pos": "n", "meaning": "公車"},
+        {"word": "business", "pos": "n", "meaning": "商務"},
+        {"word": "busy", "pos": "adj", "meaning": "忙碌的"},
+        {"word": "butter", "pos": "n", "meaning": "奶油"},
+        {"word": "buy", "pos": "v", "meaning": "購買"}
+    ],
+    "C": [
+        {"word": "carrot", "pos": "n", "meaning": "胡蘿蔔"},
+        {"word": "cake", "pos": "n", "meaning": "蛋糕"},
+        {"word": "camel", "pos": "n", "meaning": "駱駝"},
+        {"word": "camera", "pos": "n", "meaning": "相機"},
+        {"word": "camp", "pos": "n & v", "meaning": "露營"},
+        {"word": "campsite", "pos": "n", "meaning": "露營地"},
+        {"word": "canal", "pos": "n", "meaning": "運河"},
+        {"word": "car", "pos": "n", "meaning": "汽車"},
+        {"word": "card", "pos": "n", "meaning": "卡片"},
+        {"word": "career", "pos": "n", "meaning": "職業"},
+        {"word": "careful", "pos": "adj", "meaning": "小心的"},
+        {"word": "carpet", "pos": "n", "meaning": "地毯"},
+        {"word": "carry", "pos": "v", "meaning": "攜帶"},
+        {"word": "cartoon", "pos": "n", "meaning": "卡通"},
+        {"word": "cash", "pos": "n & v", "meaning": "現金"},
+        {"word": "castle", "pos": "n", "meaning": "城堡"},
+        {"word": "cat", "pos": "n", "meaning": "貓"},
+        {"word": "cathedral", "pos": "n", "meaning": "大教堂"},
+        {"word": "cent", "pos": "n", "meaning": "分(貨幣)"},
+        {"word": "centre", "pos": "n", "meaning": "中心"},
+        {"word": "centimetre", "pos": "n", "meaning": "公分"},
+        {"word": "century", "pos": "n", "meaning": "世紀"},
+        {"word": "certain", "pos": "adj", "meaning": "確定的"},
+        {"word": "chair", "pos": "n", "meaning": "椅子"},
+        {"word": "channel", "pos": "n", "meaning": "頻道"},
+        {"word": "chat", "pos": "n", "meaning": "聊天"},
+        {"word": "chatroom", "pos": "n", "meaning": "聊天室"},
+        {"word": "cheap", "pos": "adj", "meaning": "便宜的"},
+        {"word": "check", "pos": "v", "meaning": "檢查"},
+        {"word": "cheese", "pos": "n", "meaning": "起司"},
+        {"word": "chicken", "pos": "n", "meaning": "雞肉"},
+        {"word": "child", "pos": "n", "meaning": "孩童"},
+        {"word": "chips", "pos": "n pl", "meaning": "薯條"},
+        {"word": "chocolate", "pos": "n", "meaning": "巧克力"},
+        {"word": "choose", "pos": "v", "meaning": "選擇"},
+        {"word": "church", "pos": "n", "meaning": "教堂"},
+        {"word": "cinema", "pos": "n", "meaning": "電影院"},
+        {"word": "circus", "pos": "n", "meaning": "馬戲團"},
+        {"word": "city", "pos": "n", "meaning": "城市"},
+        {"word": "class", "pos": "n", "meaning": "班級"},
+        {"word": "classical", "pos": "adj", "meaning": "古典的"},
+        {"word": "classmate", "pos": "n", "meaning": "同學"},
+        {"word": "classroom", "pos": "n", "meaning": "教室"},
+        {"word": "clever", "pos": "adj", "meaning": "聰明的"},
+        {"word": "click", "pos": "v", "meaning": "點擊"},
+        {"word": "climb", "pos": "v", "meaning": "攀爬"},
+        {"word": "clock", "pos": "n", "meaning": "時鐘"},
+        {"word": "close", "pos": "v", "meaning": "關閉"},
+        {"word": "clothes", "pos": "n pl", "meaning": "衣服"},
+        {"word": "cloud", "pos": "n", "meaning": "雲"},
+        {"word": "cloudy", "pos": "adj", "meaning": "多雲的"},
+        {"word": "clown", "pos": "n", "meaning": "小丑"},
+        {"word": "club", "pos": "n", "meaning": "俱樂部"},
+        {"word": "coach", "pos": "n", "meaning": "長途公車；教練"},
+        {"word": "coat", "pos": "n", "meaning": "外套"},
+        {"word": "coffee", "pos": "n", "meaning": "咖啡"},
+        {"word": "colleague", "pos": "n", "meaning": "同事"},
+        {"word": "collect", "pos": "v", "meaning": "收集"},
+        {"word": "college", "pos": "n", "meaning": "學院"},
+        {"word": "colour", "pos": "n", "meaning": "顏色"},
+        {"word": "comb", "pos": "n", "meaning": "梳子"},
+        {"word": "come", "pos": "v", "meaning": "來"},
+        {"word": "comfortable", "pos": "adj", "meaning": "舒適的"},
+        {"word": "company", "pos": "n", "meaning": "公司"},
+        {"word": "competition", "pos": "n", "meaning": "比賽"},
+        {"word": "computer", "pos": "n", "meaning": "電腦"},
+        {"word": "concert", "pos": "n", "meaning": "音樂會"},
+        {"word": "conversation", "pos": "n", "meaning": "對話"},
+        {"word": "cooker", "pos": "n", "meaning": "炊具"},
+        {"word": "cool", "pos": "adj", "meaning": "涼爽的；酷的"},
+        {"word": "corner", "pos": "n", "meaning": "角落"},
+        {"word": "correct", "pos": "adj", "meaning": "正確的"},
+        {"word": "costume", "pos": "n", "meaning": "服裝"},
+        {"word": "country", "pos": "n", "meaning": "國家；鄉村"},
+        {"word": "countryside", "pos": "n", "meaning": "鄉下"},
+        {"word": "course", "pos": "n", "meaning": "課程"},
+        {"word": "cousin", "pos": "n", "meaning": "堂表兄弟姊妹"},
+        {"word": "cow", "pos": "n", "meaning": "乳牛"},
+        {"word": "cream", "pos": "n", "meaning": "奶油"},
+        {"word": "crossroads", "pos": "n", "meaning": "十字路口"},
+        {"word": "crowd", "pos": "n", "meaning": "人群"},
+        {"word": "crowded", "pos": "adj", "meaning": "擁擠的"},
+        {"word": "cry", "pos": "v", "meaning": "哭泣"},
+        {"word": "cupboard", "pos": "n", "meaning": "碗櫥"},
+        {"word": "curtains", "pos": "n", "meaning": "窗簾"},
+        {"word": "customer", "pos": "n", "meaning": "顧客"},
+        {"word": "cycle", "pos": "v", "meaning": "騎自行車"}
+    ],
+    "D": [{"word": "daily", "pos": "adj", "meaning": "每日的"}, {"word": "dance", "pos": "v", "meaning": "跳舞"}, {"word": "danger", "pos": "n", "meaning": "危險"}, {"word": "dark", "pos": "adj", "meaning": "黑暗的"}, {"word": "daughter", "pos": "n", "meaning": "女兒"}],
+    "E": [{"word": "early", "pos": "adj", "meaning": "早的"}, {"word": "earth", "pos": "n", "meaning": "地球"}, {"word": "east", "pos": "n", "meaning": "東方"}, {"word": "easy", "pos": "adj", "meaning": "容易的"}, {"word": "elephant", "pos": "n", "meaning": "大象"}],
+    "F": [{"word": "family", "pos": "n", "meaning": "家庭"}, {"word": "famous", "pos": "adj", "meaning": "著名的"}, {"word": "father", "pos": "n", "meaning": "父親"}, {"word": "flower", "pos": "n", "meaning": "花朵"}, {"word": "forest", "pos": "n", "meaning": "森林"}],
+    "G": [{"word": "garden", "pos": "n", "meaning": "花園"}, {"word": "glass", "pos": "n", "meaning": "玻璃"}, {"word": "glove", "pos": "n", "meaning": "手套"}, {"word": "guitar", "pos": "n", "meaning": "吉他"}, {"word": "ground", "pos": "n", "meaning": "地面"}],
+    "H": [{"word": "happy", "pos": "adj", "meaning": "快樂的"}, {"word": "hello", "pos": "exclam", "meaning": "你好"}, {"word": "heavy", "pos": "adj", "meaning": "重的"}, {"word": "horse", "pos": "n", "meaning": "馬"}, {"word": "hospital", "pos": "n", "meaning": "醫院"}],
+    "I": [{"word": "ice", "pos": "n", "meaning": "冰塊"}, {"word": "island", "pos": "n", "meaning": "島嶼"}, {"word": "important", "pos": "adj", "meaning": "重要的"}, {"word": "insect", "pos": "n", "meaning": "昆蟲"}],
+    "J": [{"word": "jacket", "pos": "n", "meaning": "夾克"}, {"word": "juice", "pos": "n", "meaning": "果汁"}, {"word": "jump", "pos": "v", "meaning": "跳躍"}, {"word": "journey", "pos": "n", "meaning": "旅程"}],
+    "K": [{"word": "keyboard", "pos": "n", "meaning": "鍵盤"}, {"word": "kitchen", "pos": "n", "meaning": "廚房"}, {"word": "kite", "pos": "n", "meaning": "風箏"}, {"word": "knife", "pos": "n", "meaning": "刀子"}],
+    "L": [{"word": "language", "pos": "n", "meaning": "語言"}, {"word": "laptop", "pos": "n", "meaning": "筆電"}, {"word": "lemon", "pos": "n", "meaning": "檸檬"}, {"word": "library", "pos": "n", "meaning": "圖書館"}],
+    "M": [{"word": "magazine", "pos": "n", "meaning": "雜誌"}, {"word": "market", "pos": "n", "meaning": "市場"}, {"word": "monkey", "pos": "n", "meaning": "猴子"}, {"word": "museum", "pos": "n", "meaning": "博物館"}],
+    "N": [{"word": "nature", "pos": "n", "meaning": "大自然"}, {"word": "neck", "pos": "n", "meaning": "脖子"}, {"word": "newspaper", "pos": "n", "meaning": "報紙"}, {"word": "nurse", "pos": "n", "meaning": "護士"}],
+    "O": [{"word": "ocean", "pos": "n", "meaning": "海洋"}, {"word": "office", "pos": "n", "meaning": "辦公室"}, {"word": "onion", "pos": "n", "meaning": "洋蔥"}, {"word": "orange", "pos": "n", "meaning": "橘子"}],
+    "P": [{"word": "parent", "pos": "n", "meaning": "父母"}, {"word": "passport", "pos": "n", "meaning": "護照"}, {"word": "pencil", "pos": "n", "meaning": "鉛筆"}, {"word": "pizza", "pos": "n", "meaning": "披薩"}],
+    "Q": [{"word": "quarter", "pos": "n", "meaning": "四分之一"}, {"word": "queen", "pos": "n", "meaning": "女王"}, {"word": "question", "pos": "n", "meaning": "問題"}, {"word": "quiet", "pos": "adj", "meaning": "安靜的"}],
+    "R": [{"word": "rabbit", "pos": "n", "meaning": "兔子"}, {"word": "radio", "pos": "n", "meaning": "收音機"}, {"word": "railway", "pos": "n", "meaning": "鐵路"}, {"word": "river", "pos": "n", "meaning": "河流"}],
+    "S": [{"word": "school", "pos": "n", "meaning": "學校"}, {"word": "scooter", "pos": "n", "meaning": "滑板車"}, {"word": "sister", "pos": "n", "meaning": "姊妹"}, {"word": "spider", "pos": "n", "meaning": "蜘蛛"}],
+    "T": [{"word": "table", "pos": "n", "meaning": "桌子"}, {"word": "taxi", "pos": "n", "meaning": "計程車"}, {"word": "teacher", "pos": "n", "meaning": "老師"}, {"word": "telephone", "pos": "n", "meaning": "電話"}],
+    "U": [{"word": "umbrella", "pos": "n", "meaning": "雨傘"}, {"word": "uncle", "pos": "n", "meaning": "叔伯舅"}, {"word": "uniform", "pos": "n", "meaning": "制服"}, {"word": "university", "pos": "n", "meaning": "大學"}],
+    "V": [{"word": "vegetable", "pos": "n", "meaning": "蔬菜"}, {"word": "video", "pos": "n", "meaning": "影片"}, {"word": "village", "pos": "n", "meaning": "村莊"}, {"word": "violin", "pos": "n", "meaning": "小提琴"}],
+    "W": [{"word": "waiter", "pos": "n", "meaning": "服務生"}, {"word": "wallet", "pos": "n", "meaning": "錢包"}, {"word": "watch", "pos": "n", "meaning": "手錶"}, {"word": "window", "pos": "n", "meaning": "窗戶"}],
+    "X": [{"word": "x-ray", "pos": "n", "meaning": "X光檢查"}],
+    "Y": [{"word": "yellow", "pos": "adj", "meaning": "黃色"}, {"word": "yesterday", "pos": "n", "meaning": "昨天"}, {"word": "young", "pos": "adj", "meaning": "年輕的"}],
+    "Z": [{"word": "zero", "pos": "n", "meaning": "零"}, {"word": "zoo", "pos": "n", "meaning": "動物園"}]
+};
+
+let currentTab = "A";
+let targetWord = "";
+let currentProgress = []; // 儲存目前的解鎖狀態
+let currentIndexToGuess = 0; // 嚴格記錄「現在必須猜中哪一個索引」
+let lives = 3;
+let score = 0;
+
+function init() {
+    const tabsContainer = document.getElementById('alphabetTabs');
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    
+    alphabet.forEach(letter => {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${letter === currentTab ? 'active' : ''}`;
+        btn.textContent = letter;
+        btn.onclick = () => selectAlphabet(letter);
+        tabsContainer.appendChild(btn);
+    });
+
+    const keyboardContainer = document.getElementById('keyboard');
+    for (let i = 97; i <= 122; i++) {
+        const char = String.fromCharCode(i);
+        const keyBtn = document.createElement('button');
+        keyBtn.className = 'key';
+        keyBtn.textContent = char.toUpperCase();
+        keyBtn.id = `key-${char}`;
+        keyBtn.onclick = () => handleGuess(char);
+        keyboardContainer.appendChild(keyBtn);
+    }
+
+    setupGame(currentTab);
+}
+
+function selectAlphabet(letter) {
+    currentTab = letter;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === letter);
+    });
+    setupGame(letter);
+}
+
+function setupGame(letter) {
+    const wordPool = vocabularyData[letter] || [];
+    if (wordPool.length === 0) {
+        alert(`目前字母 ${letter} 庫中無單字！`);
+        return;
+    }
+
+    const randomItem = wordPool[Math.floor(Math.random() * wordPool.length)];
+    targetWord = randomItem.word.toLowerCase().replace(/[^a-z]/g, ""); 
+    
+    currentProgress = Array(targetWord.length).fill("");
+    currentIndexToGuess = 0; // 重置為必須從第 0 個位置開始猜
+    lives = 3;
+
+    updateLivesDisplay();
+    document.getElementById('scoreValue').textContent = score;
+    
+    document.getElementById('hintPos').textContent = randomItem.pos;
+    document.getElementById('hintMeaning').textContent = randomItem.meaning;
+    
+    document.getElementById('gameMessage').textContent = "";
+    document.getElementById('gameMessage').className = "message";
+    document.getElementById('nextBtn').style.display = "none";
+
+    // 注意：每次新一題，都讓虛擬鍵盤保持可點選狀態，不要鎖死字母
+    document.querySelectorAll('.key').forEach(key => {
+        key.disabled = false;
+        key.className = 'key';
+    });
+
+    drawWord();
+}
+
+function drawWord() {
+    const displayContainer = document.getElementById('wordDisplay');
+    let displayStr = "";
+    
+    for (let char of currentProgress) {
+        if (char !== "") {
+            displayStr += char.toUpperCase() + " ";
+        } else {
+            displayStr += "_ ";
+        }
+    }
+    displayContainer.textContent = displayStr.trim();
+    checkGameStatus();
+}
+
+function handleGuess(char) {
+    if (lives <= 0 || currentIndexToGuess >= targetWord.length) return;
+
+    // 核心順序判定：檢查按下的字母是否完美等於「當前等待被猜出的位置」
+    const expectedChar = targetWord[currentIndexToGuess];
+    const keyBtn = document.getElementById(`key-${char}`);
+
+    if (char === expectedChar) {
+        // 完全答對順序！
+        currentProgress[currentIndexToGuess] = char;
+        currentIndexToGuess++; // 推進到下一個格子
+        
+        // 答對了，鍵盤閃爍綠色回饋，但不要 disabled 它（因為下一個字可能還會用到同一個字母）
+        keyBtn.classList.add('correct');
+        setTimeout(() => {
+            if (lives > 0 && currentProgress.includes("")) {
+                keyBtn.classList.remove('correct');
+            }
+        }, 400);
+
+    } else {
+        // 順序不對，或者根本沒這個字！直接扣血
+        keyBtn.classList.add('wrong');
+        setTimeout(() => {
+            keyBtn.classList.remove('wrong');
+        }, 500);
+        
+        lives--;
+        updateLivesDisplay();
+    }
+
+    drawWord();
+}
+
+function updateLivesDisplay() {
+    let hearts = "";
+    for (let i = 0; i < lives; i++) {
+        hearts += "💚 ";
+    }
+    if (lives === 0) hearts = "❌ 已無機會";
+    document.getElementById('livesValue').textContent = hearts;
+}
+
+function checkGameStatus() {
+    const msgElement = document.getElementById('gameMessage');
+    
+    let isWin = !currentProgress.includes("");
+
+    if (isWin) {
+        msgElement.textContent = "🎉 太棒了！完美依序通關！";
+        msgElement.className = "message win";
+        endGame(true);
+    } else if (lives <= 0) {
+        msgElement.textContent = `💥 順序出錯！正確答案是：${targetWord.toUpperCase()}`;
+        msgElement.className = "message lose";
+        endGame(false);
+    }
+}
+
+function endGame(hasWon) {
+    document.querySelectorAll('.key').forEach(key => key.disabled = true);
+    document.getElementById('nextBtn').style.display = "inline-block";
+    if (hasWon) {
+        score += 10;
+        document.getElementById('scoreValue').textContent = score;
+    }
+}
+
+// 實體鍵盤支援
+document.addEventListener('keydown', (event) => {
+    const char = event.key.toLowerCase();
+    if (char >= 'a' && char <= 'z') {
+        const keyBtn = document.getElementById(`key-${char}`);
+        if (keyBtn && !keyBtn.disabled) {
+            handleGuess(char);
+        }
+    }
+});
+
+window.onload = init;
+</script>
+</body>
+</html>
