@@ -376,7 +376,7 @@
 </div>
 
 <script>
-// 整合兩份網頁後的完整 A-Z 數據庫（已去重、補全並合併所有單字項目）
+// 完整且欄位完全正確的 KET 單字數據庫
 const vocabularyData = {
     "A": [
         {"word": "a, an", "pos": "art", "meaning": "一個"},
@@ -1492,7 +1492,7 @@ const vocabularyData = {
         {"word": "teenager", "pos": "n", "meaning": "青少年"},
         {"word": "telephone", "pos": "n & v", "meaning": "電話"},
         {"word": "television", "pos": "n", "meaning": "電視"},
-        {"word": "tell", "pos": "v", "告诉": "告訴"},
+        {"word": "tell", "pos": "v", "meaning": "告訴"},
         {"word": "temperature", "pos": "n", "meaning": "溫度"},
         {"word": "tennis", "pos": "n", "meaning": "網球"},
         {"word": "tent", "pos": "n", "meaning": "帳篷"},
@@ -1676,7 +1676,7 @@ const vocabularyData = {
         {"word": "yet", "pos": "adv", "meaning": "尚未"},
         {"word": "you", "pos": "pron", "meaning": "你；你們"},
         {"word": "young", "pos": "adj", "meaning": "年輕的"},
-        {"word": "your", "det": "det", "meaning": "你的"},
+        {"word": "your", "pos": "det", "meaning": "你的"},
         {"word": "yours", "pos": "pron", "meaning": "你的(所有格代名詞)"},
         {"word": "yourself", "pos": "pron", "meaning": "你自己"}
     ],
@@ -1706,7 +1706,6 @@ function switchPage(pageId) {
     document.getElementById('navSearchBtn').classList.toggle('active', pageId === 'searchPage');
     document.getElementById('navGameBtn').classList.toggle('active', pageId === 'gamePage');
     
-    // 如果切換到遊戲，且尚未初始化題目，就自動出題
     if (pageId === 'gamePage' && !targetWord) {
         setupGame(currentGameTab);
     }
@@ -1817,7 +1816,6 @@ function setupGame(letter) {
         return;
     }
 
-    // 隨機選字並過濾非英文字母
     const randomItem = wordPool[Math.floor(Math.random() * wordPool.length)];
     targetWord = randomItem.word.toLowerCase().replace(/[^a-z]/g, ""); 
     
@@ -1859,7 +1857,6 @@ function drawWord() {
 }
 
 function handleGuess(char) {
-    // 鎖定當前非挑戰賽分頁時禁止輸入
     if (!document.getElementById('gamePage').classList.contains('active')) return;
     if (lives <= 0 || currentIndexToGuess >= targetWord.length) return;
 
@@ -1922,7 +1919,6 @@ function endGame(hasWon) {
     }
 }
 
-// 實體鍵盤支援
 document.addEventListener('keydown', (event) => {
     const char = event.key.toLowerCase();
     if (char >= 'a' && char <= 'z') {
